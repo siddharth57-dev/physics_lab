@@ -1,1 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Virtual Lab | Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
+<style>
+    /* ================= THEME & BASICS ================= */
+    :root {
+        --primary-neon: #00d5ff;
+        --secondary-neon: #008cff;
+        --glass-bg: rgba(0, 25, 50, 0.65);
+        --glass-border: rgba(0, 180, 255, 0.3);
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: radial-gradient(circle at top, #08121f, #02060d, #000000);
+        color: #e9f3ff;
+        height: 100vh;
+        overflow: hidden; 
+    }
+
+    /* ================= LOGIN SCREEN ================= */
+    #login-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at center, #0d1f33, #000000);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        transition: opacity 0.5s ease;
+    }
+
+    .login-box {
+        width: 350px;
+        padding: 40px;
+        background: rgba(0, 20, 40, 0.8);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 2px solid var(--glass-border);
+        box-shadow: 0 0 30px rgba(0, 213, 255, 0.2);
+        text-align: center;
+    }
+
+    .login-box h2 {
+        color: var(--primary-neon);
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px var(--secondary-neon);
+    }
+
+    .input-group { margin-bottom: 20px; text-align: left; }
+    .input-group label { font-size: 14px; color: #8fdeff; margin-left: 5px; }
+    
+    .input-group input {
+        width: 100%; padding: 12px; margin-top: 5px;
+        border-radius: 8px; border: 1px solid #1fa0ff;
+        background: rgba(255, 255, 255, 0.05); color: white;
+        font-size: 16px; box-sizing: border-box;
+    }
+
+    .login-btn {
+        width: 100%; padding: 12px; margin-top: 10px;
+        background: linear-gradient(90deg, var(--secondary-neon), var(--primary-neon));
+        border: none; border-radius: 8px; color: white;
+        font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s;
+    }
+    .login-btn:hover { box-shadow: 0 0 20px var(--primary-neon); transform: scale(1.02); }
+
+    .error-msg { color: #ff4444; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* ================= DASHBOARD ================= */
+    #dashboard {
+        display: none; height: 100%;
+        flex-direction: column; align-items: center; padding-top: 40px;
+    }
+
+    .header-bar { text-align: center; margin-bottom: 50px; }
+    .header-bar h1 { font-size: 42px; color: var(--primary-neon); text-shadow: 0 0 20px var(--secondary-neon); margin: 0; }
+    .header-bar p { color: #8fdeff; font-size: 18px; }
+
+    .projects-container {
+        display: flex; gap: 30px; justify-content: center;
+        flex-wrap: wrap; width: 90%; max-width: 1200px;
+    }
+
+    .project-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        width: 300px; padding: 30px;
+        border-radius: 20px; text-align: center;
+        cursor: pointer; transition: 0.4s;
+    }
+
+    .project-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 0 30px rgba(0, 213, 255, 0.4);
+        border-color: var(--primary-neon);
+    }
+
+    .card-icon { font-size: 50px; margin-bottom: 20px; }
+    .project-card h3 { color: #fff; margin: 10px 0; }
+    .project-card p { font-size: 14px; color: #aaccff; }
+
+    .btn-launch {
+        display: inline-block; margin-top: 20px; padding: 10px 25px;
+        border: 1px solid var(--primary-neon); border-radius: 50px;
+        color: var(--primary-neon); text-decoration: none; font-size: 14px; transition: 0.3s;
+    }
+    .project-card:hover .btn-launch { background: var(--primary-neon); color: black; }
+
+    /* ================= MODAL / POPUP ================= */
+    #simulator-modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+        z-index: 2000; justify-content: center; align-items: center;
+    }
+
+    .modal-content {
+        width: 95%; height: 90%; background: #000;
+        border: 2px solid var(--primary-neon); border-radius: 15px;
+        position: relative; box-shadow: 0 0 50px rgba(0, 213, 255, 0.3); overflow: hidden;
+    }
+
+    iframe { width: 100%; height: 100%; border: none; }
+
+    .close-btn {
+        position: absolute; top: 15px; right: 20px; font-size: 30px;
+        color: white; cursor: pointer; z-index: 2001;
+        background: rgba(0,0,0,0.5); border-radius: 50%;
+        width: 40px; height: 40px; line-height: 40px; text-align: center; transition: 0.3s;
+    }
+    .close-btn:hover { background: red; transform: rotate(90deg); }
+
+    .logout-btn {
+        position: fixed; top: 20px; right: 20px;
+        background: rgba(255, 50, 50, 0.2); border: 1px solid #ff4444;
+        color: #ffaaaa; padding: 8px 15px; border-radius: 8px; cursor: pointer;
+    }
+    .logout-btn:hover { background: rgba(255, 50, 50, 0.5); color: white; }
+</style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>⚛️ Physics Lab Access</h2>
+            <div class="input-group">
+                <label>Student ID</label>
+                <input type="text" id="userid" placeholder="Enter: admin">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter: physics">
+            </div>
+            <button class="login-btn" onclick="attemptLogin()">ENTER LAB</button>
+            <p class="error-msg" id="error-msg">❌ Invalid ID or Password!</p>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD -->
+    <div id="dashboard">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+
+        <div class="header-bar">
+            <h1>Physics Virtual Laboratory</h1>
+            <p>Select a Projectile Motion Simulation Case</p>
+        </div>
+
+        <div class="projects-container">
+            <!-- Project 1 Trigger -->
+            <div class="project-card" onclick="openSimulator('sim-ground')">
+                <div class="card-icon">🚀</div>
+                <h3>Ground to Ground</h3>
+                <p>Standard projectile motion launched from ground level, landing on ground.</p>
+                <span class="btn-launch">Launch Simulator</span>
+            </div>
+
+            <!-- Project 2 Trigger -->
+            <div class="project-card" onclick="openSimulator('sim-incline')">
+                <div class="card-icon">📐</div>
+                <h3>Inclined Plane</h3>
+                <p>Advanced simulation of a projectile launched up or down a sloped surface.</p>
+                <span class="btn-launch">Launch Simulator</span>
+            </div>
+
+            <!-- Project 3 Trigger -->
+            <div class="project-card" onclick="openSimulator('sim-height')">
+                <div class="card-icon">🏢</div>
+                <h3>From Height (h)</h3>
+                <p>Simulation of an object thrown from the top of a building or cliff.</p>
+                <span class="btn-launch">Launch Simulator</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. POPUP MODAL -->
+    <div id="simulator-modal">
+        <div class="modal-content">
+            <div class="close-btn" onclick="closeSimulator()">&times;</div>
+            <!-- The simulator loads here -->
+            <iframe id="sim-frame"></iframe>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- HIDDEN STORAGE FOR YOUR 3 SIMULATOR CODES                    -->
+    <!-- I have pasted your EXACT code below inside textareas         -->
+    <!-- ============================================================ -->
+
+    <!-- PROJECT 1: GROUND TO GROUND (projectile.html) -->
+    <textarea id="sim-ground" hidden>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Projectile Motion 2D - Simulator</title>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+/* ================= BACKGROUND ================= */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #08121f, #02060d, #000000);
+    color: #e9f3ff;
+    text-align: center;
+}
+
+/* ================= MARQUEE ================= */
+.neon-marquee {
+    font-size: 28px;
+    font-weight: 700;
+    color: #49c6ff;
+    text-shadow: 0 0 22px #00b3ff, 0 0 35px #00b3ff;
+    margin-top: 10px;
+}
+
+/* ================= CARD ================= */
+.card {
+    width: 85%;
+    margin: 40px auto;
+    padding: 25px;
+
+    background: rgba(0, 40, 70, 0.45);
+    backdrop-filter: blur(12px);
+
+    border-radius: 18px;
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.25);
+    border: 1px solid rgba(0, 180, 255, 0.45);
+}
+
+h1 {
+    font-size: 34px;
+    color: #8fdeff;
+    text-shadow: 0 0 10px #00b3ff;
+}
+
+.credits {
+    color: #7bd9ff;
+    margin-bottom: 10px;
+}
+
+/* ================= INPUT ================= */
+input {
+    padding: 14px;
+    width: 260px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px solid #1fa0ff;
+    background: rgba(255,255,255,0.07);
+    color: #dff5ff;
+    font-size: 16px;
+}
+
+input:focus {
+    border-color: #58d7ff;
+    box-shadow: 0 0 10px #58d7ff;
+}
+
+/* ================= BUTTON ================= */
+button {
+    padding: 12px 28px;
+    background: linear-gradient(45deg, #008cff, #00d5ff);
+    border: none;
+    border-radius: 10px;
+    font-size: 19px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: 0.25s;
+    box-shadow: 0 0 12px #00baff88;
+}
+button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 18px #00e1ffcc;
+}
+
+/* ================= RESULT BOX ================= */
+#result-box {
+    width: 70%;
+    margin: 20px auto;
+    background: rgba(0, 25, 45, 0.7);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #009dff88;
+    box-shadow: 0 0 15px #009dff55;
+    font-size: 18px;
+    color: #cbeaff;
+}
+
+/* ================= CANVAS ================= */
+canvas {
+    margin-top: 30px;
+    background: #0a1a27;
+    border-radius: 14px;
+    border: 3px solid #0fbfff;
+    box-shadow: 0 0 20px #00eaff66;
+}
+
+/* ================= EXPLANATION BOX ================= */
+#explain-box {
+    width: 80%;
+    margin: 25px auto;
+    padding: 15px;
+    background: rgba(0, 35, 60, 0.55);
+    border-radius: 15px;
+    border: 1px solid #00b7ff66;
+    box-shadow: 0 0 12px #00caff44;
+    font-size: 17px;
+    color: #e0f9ff;
+}
+</style>
+</head>
+<body>
+
+<h2 class="neon-marquee">
+    <marquee direction="right">🚀 First Case of Projectile Motion — Ground to Ground</marquee>
+</h2>
+
+<div class="card">
+
+    <h1>🎯 Projectile Motion Simulator (Case 1 — Ground) 🎯</h1>
+
+    <h3 class="credits">
+        Made by: it's_Siddharthk | chaitanyajadhav_07 | ashish_hasure_13 | _akash_alte
+    </h3>
+
+    <input id="velocity" type="number" placeholder="Initial Velocity (m/s)">
+    <br>
+    <input id="angle" type="number" placeholder="Angle of Projection (degrees)">
+    <br>
+
+    <button onclick="simulate()">Start Simulation</button>
+
+    <div id="result-box"></div>
+
+    <canvas id="graph" width="900" height="450"></canvas>
+
+    <div id="explain-box">
+        <b>Explanation of Projectile Motion (Case 1 — Ground to Ground):</b><br><br>
+
+        In this case, the projectile is launched from the ground and lands back on the ground.  
+        The only acting force is gravity, causing a perfect symmetric parabolic motion.  
+        The maximum height occurs midway through the flight.  
+        Range depends on angle, with 45° giving maximum distance.<br><br>
+
+        <b>Formulas Used:</b><br>
+        ✔ Time of Flight: <br>
+        <b>T = (2u sinθ) / g</b><br><br>
+
+        ✔ Maximum Height:<br>
+        <b>H = (u² sin²θ) / (2g)</b><br><br>
+
+        ✔ Horizontal Range:<br>
+        <b>R = (u² sin(2θ)) / g</b><br><br>
+
+        ✔ Equation of Trajectory:<br>
+        <b>y = x tanθ − (g x²) / (2u² cos²θ)</b><br>
+    </div>
+
+</div>
+
+
+<!-- =============== JAVASCRIPT SIMULATOR =============== -->
+<script>
+function simulate() {
+
+    let v0 = parseFloat(document.getElementById("velocity").value);
+    let angle = parseFloat(document.getElementById("angle").value);
+    let g = 9.8;
+
+    if (isNaN(v0) || isNaN(angle)) {
+        alert("Please enter valid numbers!");
+        return;
+    }
+
+    let theta = angle * Math.PI / 180;
+
+    // Formulas
+    let T = (2 * v0 * Math.sin(theta)) / g;
+    let H = (v0*v0 * Math.sin(theta)**2) / (2*g);
+    let R = (v0*v0 * Math.sin(2*theta)) / g;
+
+    document.getElementById("result-box").innerHTML =
+        `<b>Time of Flight:</b> ${T.toFixed(2)} s <br>
+         <b>Maximum Height:</b> ${H.toFixed(2)} m <br>
+         <b>Horizontal Range:</b> ${R.toFixed(2)} m`;
+
+    let canvas = document.getElementById("graph");
+    let ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Auto scale
+    let margin = 60;
+    let scaleX = (canvas.width - margin*2) / R;
+    let scaleY = (canvas.height - margin*2) / H;
+    let scale = Math.min(scaleX, scaleY);
+
+    let startX = margin;
+    let groundY = canvas.height - margin;
+
+    // Axes
+    ctx.strokeStyle = "#33caff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(startX, groundY);
+    ctx.lineTo(canvas.width - margin, groundY);
+    ctx.moveTo(startX, groundY);
+    ctx.lineTo(startX, margin);
+    ctx.stroke();
+
+    // Start point
+    ctx.fillStyle = "#62ff7a";
+    ctx.beginPath();
+    ctx.arc(startX, groundY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Start", startX - 27, groundY - 10);
+
+    // Landing point
+    let landing_px = startX + R * scale;
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(landing_px, groundY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Landing", landing_px - 30, groundY - 10);
+
+    // Animation
+    let t = 0;
+    let dt = T / 300;
+
+    function animate() {
+        if (t > T) return;
+
+        let x = v0 * Math.cos(theta) * t;
+        let y = v0 * Math.sin(theta) * t - 0.5 * g * t * t;
+
+        let px = startX + x*scale;
+        let py = groundY - y*scale;
+
+        ctx.fillStyle = "#29b8ff";
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI*2);
+        ctx.fill();
+
+        t += dt;
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+</script>
+
+</body>
+</html>
+    </textarea>
+
+    <!-- PROJECT 2: INCLINED PLANE (from_inclined_plane.html) -->
+    <textarea id="sim-incline" hidden>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Projectile on Inclined Plane - Simulator UI</title>
+
+<!-- Marquee -->
+<h2 class="title-marquee">
+    <marquee direction="right">🚀 Projectile on Inclined Plane — Physics Simulator</marquee>
+</h2>
+
+<style>
+/* ====== NEW MODERN SIMULATOR COLOURS ====== */
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #08121f, #02060d, #000000);
+    color: #e9f3ff;
+    text-align: center;
+}
+
+/* Title Marquee */
+.title-marquee {
+    font-size: 28px;
+    font-weight: 700;
+    color: #49c6ff;
+    text-shadow: 0 0 22px #00b3ff, 0 0 35px #00b3ff;
+    margin-top: 15px;
+}
+
+/* ====== CARD / CONTAINER ====== */
+.card {
+    width: 85%;
+    margin: 40px auto;
+    padding: 25px;
+
+    /* Futuristic glass panel */
+    background: rgba(0, 40, 70, 0.45);
+    backdrop-filter: blur(12px);
+
+    border-radius: 18px;
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.25);
+    border: 1px solid rgba(0, 180, 255, 0.45);
+}
+
+/* Heading */
+h1 {
+    font-size: 34px;
+    color: #8fdeff;
+    text-shadow: 0 0 10px #00b3ff;
+}
+
+/* Inputs */
+input {
+    padding: 14px;
+    width: 260px;
+    margin: 10px;
+    border-radius: 10px;
+
+    border: 2px solid #1fa0ff;
+    background: rgba(255,255,255,0.07);
+    color: #dff5ff;
+
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus {
+    border-color: #58d7ff;
+    box-shadow: 0 0 10px #58d7ff;
+}
+
+/* Buttons */
+button {
+    padding: 12px 28px;
+    background: linear-gradient(45deg, #008cff, #00d5ff);
+    border: none;
+    border-radius: 10px;
+    font-size: 19px;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 0 12px #00baff88;
+    transition: 0.25s;
+}
+
+button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 18px #00e1ffcc;
+}
+
+/* Result Box */
+#result-box {
+    width: 70%;
+    margin: 20px auto;
+    background: rgba(0, 25, 45, 0.7);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #009dff88;
+    box-shadow: 0 0 15px #009dff55;
+    font-size: 18px;
+    color: #cbeaff;
+}
+
+/* Canvas */
+canvas {
+    margin-top: 30px;
+    background: #0a1a27; /* deep grey-blue */
+    border-radius: 14px;
+    border: 3px solid #0fbfff;
+    box-shadow: 0 0 20px #00eaff66;
+}
+
+/* Explanation Box */
+#explain-box {
+    width: 80%;
+    margin: 25px auto;
+    padding: 15px;
+    background: rgba(0, 35, 60, 0.55);
+    border-radius: 15px;
+    border: 1px solid #00b7ff66;
+    box-shadow: 0 0 12px #00caff44;
+    color: #e0f9ff;
+    font-size: 17px;
+}
+
+/* Formula Box */
+#formula-box {
+    width: 80%;
+    margin: 25px auto;
+    padding: 18px;
+    background: rgba(0, 45, 80, 0.55);
+    border-radius: 15px;
+    border: 1px solid #00c3ff77;
+    box-shadow: 0 0 15px #00d9ff55;
+    color: #eaffff;
+    font-size: 18px;
+    text-align: left;
+}
+
+#formula-box code {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 17px;
+    color: #9ee8ff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>🎯 Projectile Motion on Inclined Plane — Simulator 🎯</h1>
+
+    <h3 style="color:#7bd9ff;">
+        Made by: it's_Siddharthk | chaitanyajadhav_07 | ashish_hasure_13 | _akash_alte
+    </h3>
+
+    <!-- Inputs -->
+    <input id="velocity" type="number" placeholder="Initial Velocity (m/s)">
+    <br>
+    <input id="incline" type="number" placeholder="Incline Angle α (degrees)">
+    <br>
+    <input id="launch" type="number" placeholder="Launch Angle θ w.r.t Plane">
+    <br>
+
+    <button onclick="simulate()">Start Simulation</button>
+
+    <div id="result-box"></div>
+
+    <canvas id="graph" width="900" height="450"></canvas>
+
+    <div id="explain-box">
+        <b>Physics Explanation:</b><br><br>
+        This simulator represents the motion of a projectile launched from an inclined plane.  
+        The projectile is projected at an angle θ relative to the plane's surface,  
+        while the plane itself is inclined at an angle α from the horizontal.  
+        The parabolic trajectory and the landing point are computed and rendered with auto-scaling.
+    </div>
+
+    <!-- ================= FORMULA BOX ================== -->
+    <div id="formula-box">
+        <h2>📘 Physics Formulas Used</h2>
+
+        <p><b>Let:</b><br>
+        α = Incline Angle<br>
+        θ = Launch Angle w.r.t plane<br>
+        g = 9.8 m/s²<br>
+        u = Initial velocity</p>
+
+        <hr>
+
+        <p><b>1️⃣ Effective Launch Angle (with horizontal)</b><br>
+        <code>Launch = α + θ</code></p>
+
+        <p><b>2️⃣ Time of Flight</b><br>
+        <code>T = (2u · sinθ) / (g · cosα)</code></p>
+
+        <p><b>3️⃣ Range on Inclined Plane</b><br>
+        <code>R = (u² · sin(2θ)) / (g · cosα)</code></p>
+
+        <p><b>4️⃣ Maximum Height</b><br>
+        <code>H = (u² · sin²θ) / (2g · cos²α)</code></p>
+
+        <p><b>5️⃣ Motion Equations</b><br>
+        <code>x = u·cos(α+θ)·t</code><br>
+        <code>y = u·sin(α+θ)·t − (1/2)gt²</code></p>
+    </div>
+
+</div>
+
+
+<!-- ====================================================== -->
+<!--    SIMULATION SCRIPT                                   -->
+<!-- ====================================================== -->
+
+<script>
+function simulate() {
+
+    let u = parseFloat(document.getElementById("velocity").value);
+    let alpha = parseFloat(document.getElementById("incline").value);
+    let theta = parseFloat(document.getElementById("launch").value);
+    let g = 9.8;
+
+    if (isNaN(u) || isNaN(alpha) || isNaN(theta)) {
+        alert("Enter all values!");
+        return;
+    }
+
+    let A = alpha * Math.PI/180;
+    let T = theta * Math.PI/180;
+    let launch = A + T;
+
+    let time = (2*u*Math.sin(T)) / (g*Math.cos(A));
+    let range = (u*u * Math.sin(2*T)) / (g * Math.cos(A));
+    let maxH = (u*u * Math.sin(T)**2) / (2*g*Math.cos(A)**2);
+
+    document.getElementById("result-box").innerHTML =
+        `<b>Time of Flight:</b> ${time.toFixed(2)} s <br>
+         <b>Range on Incline:</b> ${range.toFixed(2)} m <br>
+         <b>Maximum Height:</b> ${maxH.toFixed(2)} m`;
+
+    let canvas = document.getElementById("graph");
+    let ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    /* Auto scaling */
+    let margin = 60;
+    let maxX = range * Math.cos(A);
+    let maxY = maxH + (range * Math.sin(A));
+
+    let scaleX = (canvas.width - margin*2) / maxX;
+    let scaleY = (canvas.height - margin*2) / maxY;
+    let scale = Math.min(scaleX, scaleY);
+
+    let baseX = margin;
+    let baseY = canvas.height - margin;
+
+    /* Axes */
+    ctx.strokeStyle = "#33caff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(canvas.width - margin, baseY);   
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(baseX, margin);                  
+    ctx.stroke();
+
+    ctx.fillStyle = "#8fe8ff";
+    ctx.fillText("X-axis", canvas.width - 120, baseY - 10);
+    ctx.fillText("Y-axis", baseX + 10, margin + 10);
+
+    /* Inclined plane */
+    let endX = baseX + maxX * scale;
+    let endY = baseY - (maxX * Math.tan(A)) * scale;
+
+    ctx.strokeStyle = "#ffaa44";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+
+    /* Start point */
+    ctx.fillStyle = "#62ff7a";
+    ctx.beginPath();
+    ctx.arc(baseX, baseY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Start", baseX - 30, baseY - 10);
+
+    /* Animation */
+    let t = 0;
+    let dt = time / 350;
+
+    function animate() {
+        if (t > time) return;
+
+        let x = u*Math.cos(launch)*t;
+        let y = u*Math.sin(launch)*t - 0.5*g*t*t;
+
+        let px = baseX + x*scale;
+        let py = baseY - y*scale;
+
+        ctx.fillStyle = "#29b8ff";
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI*2);
+        ctx.fill();
+
+        t += dt;
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    /* Landing point */
+    let landX = baseX + maxX * scale;
+    let landY = endY;
+
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(landX, landY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Landing", landX - 30, landY - 10);
+}
+</script>
+
+</body>
+</html>
+    </textarea>
+
+    <!-- PROJECT 3: FROM HEIGHT H (from_height_h.html) -->
+    <textarea id="sim-height" hidden>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Projectile From Height - Simulator</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+/* ---------- BACKGROUND ---------- */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #08121f, #02060d, #000000);
+    color: #e9f3ff;
+    text-align: center;
+}
+
+/* Title marquee */
+.title-marquee {
+    font-size: 28px;
+    font-weight: 700;
+    color: #49c6ff;
+    text-shadow: 0 0 22px #00b3ff;
+    margin-top: 10px;
+}
+
+/* ---------- CARD ---------- */
+.card {
+    width: 85%;
+    margin: 40px auto;
+    padding: 25px;
+    background: rgba(0, 40, 70, 0.45);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    box-shadow: 0 0 25px rgba(0, 180, 255, 0.25);
+    border: 1px solid rgba(0, 180, 255, 0.45);
+}
+
+h1 {
+    font-size: 34px;
+    color: #8fdeff;
+    text-shadow: 0 0 10px #00b3ff;
+}
+
+.credits {
+    color: #7bd9ff;
+}
+
+/* ---------- INPUTS ---------- */
+input {
+    padding: 14px;
+    width: 260px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px solid #1fa0ff;
+    background: rgba(255,255,255,0.07);
+    color: #dff5ff;
+    font-size: 16px;
+}
+
+input:focus {
+    border-color: #58d7ff;
+    box-shadow: 0 0 10px #58d7ff;
+}
+
+/* ---------- BUTTON ---------- */
+button {
+    padding: 12px 28px;
+    background: linear-gradient(45deg, #008cff, #00d5ff);
+    border: none;
+    border-radius: 10px;
+    font-size: 19px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: 0.25s;
+    box-shadow: 0 0 12px #00baff88;
+}
+
+button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 18px #00e1ffcc;
+}
+
+/* ---------- RESULT BOX ---------- */
+#result-box {
+    width: 70%;
+    margin: 20px auto;
+    background: rgba(0, 25, 45, 0.7);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #009dff88;
+    box-shadow: 0 0 15px #009dff55;
+    font-size: 18px;
+    color: #cbeaff;
+}
+
+/* ---------- CANVAS ---------- */
+canvas {
+    margin-top: 30px;
+    background: #0a1a27;
+    border-radius: 14px;
+    border: 3px solid #0fbfff;
+    box-shadow: 0 0 20px #00eaff66;
+}
+
+/* ---------- EXPLANATION BOX ---------- */
+#explain-box {
+    width: 80%;
+    margin: 25px auto;
+    padding: 15px;
+    background: rgba(0, 35, 60, 0.55);
+    border-radius: 15px;
+    border: 1px solid #00b7ff66;
+    box-shadow: 0 0 12px #00caff44;
+    color: #e0f9ff;
+    font-size: 17px;
+}
+
+/* ---------- FORMULA BOX ---------- */
+#formula-box {
+    width: 80%;
+    margin: 25px auto;
+    padding: 18px;
+    background: rgba(0, 45, 80, 0.55);
+    border-radius: 15px;
+    border: 1px solid #00c3ff77;
+    box-shadow: 0 0 15px #00d9ff55;
+    color: #eaffff;
+    font-size: 18px;
+    text-align: left;
+}
+
+#formula-box code {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 17px;
+    color: #9ee8ff;
+}
+</style>
+</head>
+
+<body>
+
+<h2 class="title-marquee">
+    <marquee direction="right">🚀 Projectile Motion From Height — Physics Simulator</marquee>
+</h2>
+
+<div class="card">
+
+    <h1>🎯 Projectile Motion From Height (h) 🎯</h1>
+
+    <h3 class="credits">
+        Made by: it's_Siddharthk | chaitanyajadhav_07 | ashish_hasure_13 | _akash_alte
+    </h3>
+
+    <input id="velocity" type="number" placeholder="Initial Velocity (m/s)">
+    <br>
+    <input id="angle" type="number" placeholder="Angle of Projection (degrees)">
+    <br>
+    <input id="height" type="number" placeholder="Height h (meters)">
+    <br>
+
+    <button onclick="simulate()">Start Simulation</button>
+
+    <div id="result-box"></div>
+
+    <canvas id="graph" width="900" height="450"></canvas>
+
+    <div id="explain-box">
+        <b>Physics Explanation:</b><br><br>
+        This simulation shows a projectile launched from a height h above the ground.  
+        The object is thrown with velocity u at an angle θ from the horizontal.  
+        The trajectory is longer because of additional falling time due to height h.  
+        You can clearly see the:<br><br>
+        ✔ Building of height h <br>
+        ✔ Starting point on top of building <br>
+        ✔ Curved parabolic motion <br>
+        ✔ Landing point on ground <br>
+        ✔ X and Y axes for reference <br>
+    </div>
+
+    <div id="formula-box">
+        <h2>📘 Physics Formulas Used</h2>
+
+        <p><b>1️⃣ Time of Flight</b><br>
+        <code>T = (u·sinθ + √(u²·sin²θ + 2gh)) / g</code></p>
+
+        <p><b>2️⃣ Horizontal Range</b><br>
+        <code>R = u·cosθ · T</code></p>
+
+        <p><b>3️⃣ Maximum Height (from ground)</b><br>
+        <code>H = h + (u²·sin²θ) / (2g)</code></p>
+
+        <p><b>4️⃣ Motion Equations</b><br>
+        <code>x = u·cosθ · t</code><br>
+        <code>y = h + u·sinθ · t − ½ g t²</code></p>
+    </div>
+
+</div>
+
+<script>
+function simulate() {
+
+    let u = parseFloat(document.getElementById("velocity").value);
+    let angle = parseFloat(document.getElementById("angle").value);
+    let h = parseFloat(document.getElementById("height").value);
+    let g = 9.8;
+
+    if (isNaN(u) || isNaN(angle) || isNaN(h)) {
+        alert("Enter all values!");
+        return;
+    }
+
+    let theta = angle * Math.PI / 180;
+
+    // Time of flight
+    let time = (u * Math.sin(theta) + Math.sqrt((u * Math.sin(theta))**2 + 2 * g * h)) / g;
+
+    // Range
+    let range = u * Math.cos(theta) * time;
+
+    // Maximum height
+    let maxH = h + (u*u * Math.sin(theta)**2) / (2*g);
+
+    document.getElementById("result-box").innerHTML =
+        `<b>Time of Flight:</b> ${time.toFixed(2)} s <br>
+         <b>Horizontal Range:</b> ${range.toFixed(2)} m <br>
+         <b>Maximum Height:</b> ${maxH.toFixed(2)} m`;
+
+    let canvas = document.getElementById("graph");
+    let ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    let margin = 60;
+    let scaleX = (canvas.width - margin*2) / range;
+    let scaleY = (canvas.height - margin*2) / maxH;
+    let scale = Math.min(scaleX, scaleY);
+
+    let baseX = margin;
+    let baseY = canvas.height - margin;
+
+    /* Axes */
+    ctx.strokeStyle = "#33caff";
+    ctx.lineWidth = 2;
+
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(canvas.width - margin, baseY);
+    ctx.stroke();
+    ctx.fillStyle = "#8fe8ff";
+    ctx.fillText("X-axis", canvas.width - 120, baseY - 10);
+
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(baseX, margin);
+    ctx.stroke();
+    ctx.fillText("Y-axis", baseX + 10, margin + 10);
+
+    /* Building */
+    let hpx = h * scale;
+    ctx.fillStyle = "#ffaa44";
+    ctx.fillRect(baseX - 40, baseY - hpx, 40, hpx);
+
+    /* Start point */
+    let startX = baseX;
+    let startY = baseY - hpx;
+
+    ctx.fillStyle = "#62ff7a";
+    ctx.beginPath();
+    ctx.arc(startX, startY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Start", startX - 35, startY - 10);
+
+    /* Animation */
+    let t = 0;
+    let dt = time / 350;
+
+    function animate() {
+        if (t > time) return;
+
+        let x = u * Math.cos(theta) * t;
+        let y = h + (u * Math.sin(theta) * t) - 0.5 * g * t * t;
+
+        let px = startX + x * scale;
+        let py = baseY - y * scale;
+
+        ctx.fillStyle = "#29b8ff";
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI*2);
+        ctx.fill();
+
+        t += dt;
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    /* Landing point */
+    let landX = startX + range * scale;
+    let landY = baseY;
+
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(landX, landY, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillText("Landing", landX - 30, landY - 10);
+}
+</script>
+
+</body>
+</html>
+    </textarea>
+
+<script>
+    // ================= MAIN PORTAL LOGIC =================
+
+    window.onload = function() {
+        if(localStorage.getItem("isLoggedIn") === "true") {
+            showDashboard();
+        }
+    }
+
+    function attemptLogin() {
+        const id = document.getElementById("userid").value;
+        const pass = document.getElementById("password").value;
+        const error = document.getElementById("error-msg");
+
+        // LOGIN CREDENTIALS
+        if (id === "admin" && pass === "physics") {
+            localStorage.setItem("isLoggedIn", "true");
+            showDashboard();
+        } else {
+            error.style.display = "block";
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById("login-screen").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("dashboard").style.display = "flex";
+        }, 500);
+    }
+
+    function logout() {
+        localStorage.removeItem("isLoggedIn");
+        location.reload();
+    }
+
+    // ================= SIMULATOR INJECTION LOGIC =================
+    // This reads the hidden textareas and puts the code into the iframe
+    function openSimulator(simId) {
+        const modal = document.getElementById("simulator-modal");
+        const frame = document.getElementById("sim-frame");
+        
+        // Get the HTML content from the hidden textarea
+        const simCode = document.getElementById(simId).value;
+        
+        // Inject into iframe
+        frame.srcdoc = simCode;
+        
+        modal.style.display = "flex";
+    }
+
+    function closeSimulator() {
+        const modal = document.getElementById("simulator-modal");
+        const frame = document.getElementById("sim-frame");
+        
+        modal.style.display = "none";
+        frame.srcdoc = ""; // Clear to stop simulation
+    }
+
+</script>
+
+</body>
+</html>
