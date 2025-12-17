@@ -760,6 +760,27 @@ function simulate() {
     ctx.lineTo(baseX, margin);                  
     ctx.stroke();
 
+    // ===== DISPLAY MAX RANGE & MAX HEIGHT =====
+ctx.fillStyle = "#ffffff";
+ctx.font = "14px Poppins";
+
+// X-axis max range
+ctx.textAlign = "center";
+ctx.fillText(
+  `R = ${R.toFixed(2)} m`,
+  startX + R * scale,
+  groundY + 25
+);
+
+// Y-axis max height
+ctx.textAlign = "left";
+ctx.fillText(
+  `H = ${H.toFixed(2)} m`,
+  startX + 5,
+  groundY - H * scale
+);
+
+
     ctx.fillStyle = "#8fe8ff";
     ctx.fillText("X-axis", canvas.width - 120, baseY - 10);
     ctx.fillText("Y-axis", baseX + 10, margin + 10);
