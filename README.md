@@ -12,4 +12,4 @@ Open `index.html` in any browser.
 - Contact form
 
 ## Author
-SID
+SIDDHARTH KABADE
